@@ -15,43 +15,49 @@ html,body{
   background:black;
   font-family:sans-serif;
 }
+
+/* ================= A-SCENE ================= */
 a-scene{
   position:fixed;
   inset:0;
 }
+
+/* ================= INFO PANEL ================= */
 #info{
   position:fixed;
-  bottom:120px;
-  left:50%;
-  transform:translateX(-50%);
   background:rgba(0,0,0,.85);
   color:white;
-  padding:16px 22px;
   border-radius:16px;
   display:none;
   z-index:10;
   text-align:center;
   max-width:90%;
 }
+
+/* ================= UI COMMON ================= */
 #ui{
   position:fixed;
-  bottom:25px;
-  left:50%;
-  transform:translateX(-50%);
   display:flex;
-  gap:20px;
   z-index:10;
 }
+
 #ui button{
-  width:64px;
-  height:64px;
   border-radius:50%;
   border:none;
-  font-size:28px;
   background:#222;
   color:white;
   cursor:pointer;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:0.2s;
 }
+
+#ui button:active{
+  transform:scale(0.9);
+}
+
+/* ================= INTRO ================= */
 #intro{
   position:fixed;
   inset:0;
@@ -66,7 +72,6 @@ a-scene{
 }
 
 #intro h1{
-  font-size:32px;
   margin-bottom:10px;
 }
 
@@ -76,40 +81,96 @@ a-scene{
 }
 
 #intro button{
-  padding:14px 28px;
-  font-size:20px;
   border:none;
   border-radius:30px;
   background:#1e90ff;
   color:white;
   cursor:pointer;
 }
-@media (max-width: 768px) {
+
+/* ================================================= */
+/* ======================= PC ======================= */
+/* ================================================= */
+@media (min-width: 769px){
+
   #ui{
-    gap:10px;
-    bottom:15px;
+    bottom:25px;
+    left:50%;
+    transform:translateX(-50%);
+    flex-direction:row;
+    gap:20px;
   }
 
   #ui button{
-    width:46px;
-    height:46px;
-    font-size:20px;
+    width:64px;
+    height:64px;
+    font-size:28px;
   }
 
   #info{
-    font-size:14px;
-    padding:12px 14px;
-    bottom:90px;
+    bottom:120px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:16px 22px;
   }
 
   #intro h1{
-    font-size:24px;
+    font-size:32px;
   }
 
   #intro p{
-    font-size:14px;
+    font-size:16px;
+  }
+
+  #intro button{
+    padding:14px 28px;
+    font-size:20px;
   }
 }
+
+/* ================================================= */
+/* ===================== MOBILE ===================== */
+/* ================================================= */
+@media (max-width: 768px){
+
+  #ui{
+    bottom:16px;
+    left:50%;
+    transform:translateX(-50%);
+    flex-wrap:wrap;
+    width:92%;
+    justify-content:center;
+    gap:12px;
+  }
+
+  #ui button{
+    width:72px;
+    height:72px;
+    font-size:30px;
+  }
+
+  #info{
+    bottom:150px;
+    left:50%;
+    transform:translateX(-50%);
+    padding:14px 18px;
+    font-size:15px;
+  }
+
+  #intro h1{
+    font-size:26px;
+  }
+
+  #intro p{
+    font-size:15px;
+  }
+
+  #intro button{
+    padding:12px 24px;
+    font-size:18px;
+  }
+}
+
 </style>
 </head>
 
@@ -131,9 +192,19 @@ a-scene{
 
 <a-scene
   embedded
-  renderer="antialias:true"
   vr-mode-ui="enabled:false"
-  arjs="sourceType:webcam; debugUIEnabled:false; trackingMethod:best;">
+  renderer="antialias:true"
+  arjs="sourceType:webcam; videoTexture:true; debugUIEnabled:false">
+
+<!-- CAMERA -->
+<a-entity id="cameraRig" position="0 1.6 60">
+  <a-camera look-controls>
+    <a-entity
+      cursor="rayOrigin: mouse"
+      raycaster="objects: .planet">
+    </a-entity>
+  </a-camera>
+</a-entity>
 
 <!-- LIGHT -->
 <a-light type="ambient" intensity="1.2"></a-light>
@@ -152,14 +223,8 @@ a-scene{
   <a-asset-item id="neptune" src="neptune.gltf"></a-asset-item>
 </a-assets>
 
-  <a-entity id="cameraRig">
-    <a-camera look-controls>
-      <a-entity cursor="rayOrigin: mouse"
-                raycaster="objects: .planet"></a-entity>
-    </a-camera>
-
-    <!-- ⭐ ระบบสุริยะล็อกกับกล้อง -->
-  <a-entity id="solarSystem" position="0 0 -6">
+<!-- SOLAR SYSTEM -->
+<a-entity id="solarSystem">
 
   <a-entity class="planet" gltf-model="#sun"
     position="0 1 -2000"
@@ -220,7 +285,6 @@ a-scene{
 </a-entity>
 
 <script>
-const solarSystem = document.getElementById("solarSystem");
 const planets = document.querySelectorAll(".planet");
 const cameraRig = document.getElementById("cameraRig");
 const info = document.getElementById("info");
@@ -228,12 +292,12 @@ const info = document.getElementById("info");
 let index = 0;
 let isPlaying = true;
 let teacherMode = false;
-let currentMinZoom = -3;
+
 let zoomOffset = 0;
 
-const ZOOM_MIN = 2;
-const ZOOM_MAX = 12;
-const ZOOM_STEP = 1;
+const ZOOM_MIN = 5;    // ใกล้สุด (ชนโมเดลไม่ได้)
+const ZOOM_MAX = 120;  // ไกลสุด
+const ZOOM_STEP = 8;   // ความแรงต่อครั้ง
 
 const cameraDistances = [
   80,  // Sun
@@ -339,53 +403,44 @@ function setupPlanetSpin(){
 
 /* ===== โฟกัสดาว ===== */
 function focusPlanet(i){
-  index = i;
+  index = i;              
   zoomOffset = 0;
 
   const planet = planets[i];
   const pos = planet.getAttribute("position");
-  const system = document.getElementById("solarSystem");
 
-  // ===== ล็อกระยะซูมตามขนาดดาว =====
-  // ดาวใหญ่ → ซูมเข้าได้น้อย / ดาวเล็ก → ซูมเข้าได้มากขึ้น
-  currentMinZoom = -cameraDistances[i] / 10;
+  // ===== รีเซ็ตกล้อง =====
+  resetCameraView();
 
-  // ลบ animation เก่า
-  system.removeAttribute("animation__focus");
-  system.removeAttribute("animation__spinFX");
+  cameraRig.removeAttribute("animation__move");
+  cameraRig.removeAttribute("animation__spin");
+  
+  // ===== เคลื่อนกล้อง =====
+  cameraRig.setAttribute("animation__move", {
+    property: "position",
+    to: `${pos.x} 1.6 ${pos.z + cameraDistances[i]}`,
+    dur: 1400,
+    easing: "easeInOutCubic"
+  });
 
-  /* =========================
-     1) เอฟเฟกต์หมุนเท่ ๆ ตอนเปลี่ยนดาว
-     ========================= */
-  system.setAttribute("animation__spinFX", {
+  // ===== หมุนกล้อง (effect ตอนเปลี่ยนดาว) =====
+  cameraRig.setAttribute("animation__spin", {
     property: "rotation",
     from: "0 0 0",
     to: "0 360 0",
-    dur: 900,
+    dur: 1000,
     easing: "easeInOutSine"
   });
 
-  /* =========================
-     2) เลื่อนระบบให้ดาวอยู่กลางจอ
-     ========================= */
-  system.setAttribute("animation__focus", {
-    property: "position",
-    to: `${-pos.x} ${-pos.y} -6`,
-    dur: 900,
-    easing: "easeOutCubic"
-  });
-
-  /* =========================
-     3) คุมความเร็วหมุนดาว
-     ========================= */
+  // ===== คุมความเร็วหมุนดาว =====
   planets.forEach(p=>{
+    p.setAttribute("animation__spin", "enabled", true);
     p.setAttribute("animation__spin", "dur", 20000);
   });
+
   planet.setAttribute("animation__spin", "dur", 8000);
 
-  /* =========================
-     4) แสดงข้อมูล
-     ========================= */
+  // ===== แสดงข้อมูล =====
   showInfo(planet);
 }
 
@@ -470,14 +525,32 @@ function resetCameraView(){
 }
 
 function zoomIn(){
-  solarSystem.object3D.position.z =
-    Math.min(solarSystem.object3D.position.z + 0.5, currentMinZoom);
+  zoomOffset = Math.max(zoomOffset - ZOOM_STEP, -ZOOM_MAX);
+  applyZoom();
 }
 
 function zoomOut(){
-  solarSystem.object3D.position.z =
-    Math.max(solarSystem.object3D.position.z - 0.5, -12);
+  zoomOffset = Math.min(zoomOffset + ZOOM_STEP, ZOOM_MAX);
+  applyZoom();
 }
+
+function applyZoom(){
+  const planet = planets[index];
+  const pos = planet.getAttribute("position");
+
+  const baseDist = cameraDistances[index];
+  const finalDist = Math.max(baseDist + zoomOffset, ZOOM_MIN);
+
+  cameraRig.removeAttribute("animation__move");
+
+  cameraRig.setAttribute("animation__move", {
+    property: "position",
+    to: `${pos.x} 1.6 ${pos.z + finalDist}`,
+    dur: 400,
+    easing: "easeOutQuad"
+  });
+}
+
 </script>
 
 </a-scene>
