@@ -135,17 +135,6 @@ a-scene{
   vr-mode-ui="enabled:false"
   arjs="sourceType:webcam; debugUIEnabled:false; trackingMethod:best;">
 
-
-<!-- CAMERA -->
-<a-entity id="cameraRig" position="0 1.6 60">
-  <a-camera look-controls>
-    <a-entity
-      cursor="rayOrigin: mouse"
-      raycaster="objects: .planet">
-    </a-entity>
-  </a-camera>
-</a-entity>
-
 <!-- LIGHT -->
 <a-light type="ambient" intensity="1.2"></a-light>
 <a-light type="directional" position="200 300 200" intensity="1"></a-light>
@@ -163,8 +152,14 @@ a-scene{
   <a-asset-item id="neptune" src="neptune.gltf"></a-asset-item>
 </a-assets>
 
-<!-- SOLAR SYSTEM -->
-<a-entity id="solarSystem">
+  <a-entity id="cameraRig">
+    <a-camera look-controls>
+      <a-entity cursor="rayOrigin: mouse"
+                raycaster="objects: .planet"></a-entity>
+    </a-camera>
+
+    <!-- ⭐ ระบบสุริยะล็อกกับกล้อง -->
+  <a-entity id="solarSystem" position="0 0 -6">
 
   <a-entity class="planet" gltf-model="#sun"
     position="0 1 -2000"
@@ -225,6 +220,7 @@ a-scene{
 </a-entity>
 
 <script>
+const solarSystem = document.getElementById("solarSystem");
 const planets = document.querySelectorAll(".planet");
 const cameraRig = document.getElementById("cameraRig");
 const info = document.getElementById("info");
@@ -232,7 +228,7 @@ const info = document.getElementById("info");
 let index = 0;
 let isPlaying = true;
 let teacherMode = false;
-
+let currentMinZoom = -3;
 let zoomOffset = 0;
 
 const ZOOM_MIN = 2;
@@ -343,44 +339,53 @@ function setupPlanetSpin(){
 
 /* ===== โฟกัสดาว ===== */
 function focusPlanet(i){
-  index = i;              
+  index = i;
   zoomOffset = 0;
 
   const planet = planets[i];
   const pos = planet.getAttribute("position");
+  const system = document.getElementById("solarSystem");
 
-  // ===== รีเซ็ตกล้อง =====
-  resetCameraView();
+  // ===== ล็อกระยะซูมตามขนาดดาว =====
+  // ดาวใหญ่ → ซูมเข้าได้น้อย / ดาวเล็ก → ซูมเข้าได้มากขึ้น
+  currentMinZoom = -cameraDistances[i] / 10;
 
-  cameraRig.removeAttribute("animation__move");
-  cameraRig.removeAttribute("animation__spin");
-  
-  // ===== เคลื่อนกล้อง =====
-  cameraRig.setAttribute("animation__move", {
-    property: "position",
-    to: `${pos.x} 1.6 ${pos.z + cameraDistances[i]}`,
-    dur: 1400,
-    easing: "easeInOutCubic"
-  });
+  // ลบ animation เก่า
+  system.removeAttribute("animation__focus");
+  system.removeAttribute("animation__spinFX");
 
-  // ===== หมุนกล้อง (effect ตอนเปลี่ยนดาว) =====
-  cameraRig.setAttribute("animation__spin", {
+  /* =========================
+     1) เอฟเฟกต์หมุนเท่ ๆ ตอนเปลี่ยนดาว
+     ========================= */
+  system.setAttribute("animation__spinFX", {
     property: "rotation",
     from: "0 0 0",
     to: "0 360 0",
-    dur: 1000,
+    dur: 900,
     easing: "easeInOutSine"
   });
 
-  // ===== คุมความเร็วหมุนดาว =====
-  planets.forEach(p=>{
-    p.setAttribute("animation__spin", "enabled", true);
-    p.setAttribute("animation__spin", "dur", 20000);
+  /* =========================
+     2) เลื่อนระบบให้ดาวอยู่กลางจอ
+     ========================= */
+  system.setAttribute("animation__focus", {
+    property: "position",
+    to: `${-pos.x} ${-pos.y} -6`,
+    dur: 900,
+    easing: "easeOutCubic"
   });
 
+  /* =========================
+     3) คุมความเร็วหมุนดาว
+     ========================= */
+  planets.forEach(p=>{
+    p.setAttribute("animation__spin", "dur", 20000);
+  });
   planet.setAttribute("animation__spin", "dur", 8000);
 
-  // ===== แสดงข้อมูล =====
+  /* =========================
+     4) แสดงข้อมูล
+     ========================= */
   showInfo(planet);
 }
 
@@ -465,32 +470,14 @@ function resetCameraView(){
 }
 
 function zoomIn(){
-  zoomOffset = Math.max(zoomOffset - ZOOM_STEP, -ZOOM_MAX);
-  applyZoom();
+  solarSystem.object3D.position.z =
+    Math.min(solarSystem.object3D.position.z + 0.5, currentMinZoom);
 }
 
 function zoomOut(){
-  zoomOffset = Math.min(zoomOffset + ZOOM_STEP, ZOOM_MAX);
-  applyZoom();
+  solarSystem.object3D.position.z =
+    Math.max(solarSystem.object3D.position.z - 0.5, -12);
 }
-
-function applyZoom(){
-  const planet = planets[index];
-  const pos = planet.getAttribute("position");
-
-  const baseDist = cameraDistances[index];
-  const finalDist = Math.max(baseDist + zoomOffset, ZOOM_MIN);
-
-  cameraRig.removeAttribute("animation__move");
-
-  cameraRig.setAttribute("animation__move", {
-    property: "position",
-    to: `${pos.x} 1.6 ${pos.z + finalDist}`,
-    dur: 400,
-    easing: "easeOutQuad"
-  });
-}
-
 </script>
 
 </a-scene>
