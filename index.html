@@ -84,6 +84,32 @@ a-scene{
   color:white;
   cursor:pointer;
 }
+@media (max-width: 768px) {
+  #ui{
+    gap:10px;
+    bottom:15px;
+  }
+
+  #ui button{
+    width:46px;
+    height:46px;
+    font-size:20px;
+  }
+
+  #info{
+    font-size:14px;
+    padding:12px 14px;
+    bottom:90px;
+  }
+
+  #intro h1{
+    font-size:24px;
+  }
+
+  #intro p{
+    font-size:14px;
+  }
+}
 </style>
 </head>
 
@@ -105,9 +131,10 @@ a-scene{
 
 <a-scene
   embedded
-  vr-mode-ui="enabled:false"
   renderer="antialias:true"
-  arjs="sourceType:webcam; videoTexture:true; debugUIEnabled:false">
+  vr-mode-ui="enabled:false"
+  arjs="sourceType:webcam; debugUIEnabled:false; trackingMethod:best;">
+
 
 <!-- CAMERA -->
 <a-entity id="cameraRig" position="0 1.6 60">
@@ -208,9 +235,9 @@ let teacherMode = false;
 
 let zoomOffset = 0;
 
-const ZOOM_MIN = 5;    // ใกล้สุด (ชนโมเดลไม่ได้)
-const ZOOM_MAX = 120;  // ไกลสุด
-const ZOOM_STEP = 8;   // ความแรงต่อครั้ง
+const ZOOM_MIN = 2;
+const ZOOM_MAX = 12;
+const ZOOM_STEP = 1;
 
 const cameraDistances = [
   80,  // Sun
