@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>Markerless AR Solar System (Final 100x)</title>
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+<style>
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:black;
+  font-family:sans-serif;
+}
+a-scene{
+  position:fixed;
+  inset:0;
+}
+#info{
+  position:fixed;
+  bottom:120px;
+  left:50%;
+  transform:translateX(-50%);
+  background:rgba(0,0,0,.85);
+  color:white;
+  padding:16px 22px;
+  border-radius:16px;
+  display:none;
+  z-index:10;
+  text-align:center;
+  max-width:90%;
+}
+#ui{
+  position:fixed;
+  bottom:25px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:20px;
+  z-index:10;
+}
+#ui button{
+  width:64px;
+  height:64px;
+  border-radius:50%;
+  border:none;
+  font-size:28px;
+  background:#222;
+  color:white;
+  cursor:pointer;
+}
+#intro{
+  position:fixed;
+  inset:0;
+  background:radial-gradient(circle at top,#111,#000);
+  color:white;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  z-index:999;
+  text-align:center;
+}
+
+#intro h1{
+  font-size:32px;
+  margin-bottom:10px;
+}
+
+#intro p{
+  opacity:.85;
+  margin-bottom:30px;
+}
+
+#intro button{
+  padding:14px 28px;
+  font-size:20px;
+  border:none;
+  border-radius:30px;
+  background:#1e90ff;
+  color:white;
+  cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div id="info">
+  
+</div>
+
+<!-- ปุ่มลูกศร -->
+<div id="ui">
+  <button onclick="prevPlanet()">◀</button>
+  <button onclick="nextPlanet()">▶</button>
+  <button onclick="togglePlay()">⏯</button>
+  <button onclick="toggleTeacher()">🎓</button>
+  <button onclick="zoomIn()">＋</button>
+  <button onclick="zoomOut()">－</button>
+</div>
+
+<a-scene
+  embedded
+  vr-mode-ui="enabled:false"
+  renderer="antialias:true"
+  arjs="sourceType:webcam; videoTexture:true; debugUIEnabled:false">
+
+<!-- CAMERA -->
+<a-entity id="cameraRig" position="0 1.6 60">
+  <a-camera look-controls>
+    <a-entity
+      cursor="rayOrigin: mouse"
+      raycaster="objects: .planet">
+    </a-entity>
+  </a-camera>
+</a-entity>
+
+<!-- LIGHT -->
+<a-light type="ambient" intensity="1.2"></a-light>
+<a-light type="directional" position="200 300 200" intensity="1"></a-light>
+
+<!-- ASSETS -->
+<a-assets>
+  <a-asset-item id="sun" src="sun.gltf"></a-asset-item>
+  <a-asset-item id="mercury" src="mercurius.gltf"></a-asset-item>
+  <a-asset-item id="venus" src="venus.gltf"></a-asset-item>
+  <a-asset-item id="earth" src="earth.gltf"></a-asset-item>
+  <a-asset-item id="mars" src="mars.gltf"></a-asset-item>
+  <a-asset-item id="jupiter" src="jupiter.gltf"></a-asset-item>
+  <a-asset-item id="saturn" src="saturn.gltf"></a-asset-item>
+  <a-asset-item id="uranus" src="uranus.gltf"></a-asset-item>
+  <a-asset-item id="neptune" src="neptune.gltf"></a-asset-item>
+</a-assets>
+
+<!-- SOLAR SYSTEM -->
+<a-entity id="solarSystem">
+
+  <a-entity class="planet" gltf-model="#sun"
+    position="0 1 -2000"
+    scale="4 4 4"
+    data-name="ดวงอาทิตย์"
+    data-info="ศูนย์กลางของระบบสุริยะ">
+  </a-entity>
+
+  <a-entity class="planet" gltf-model="#mercury"
+    position="1000 3 -2000"
+    scale="5 5 5"
+    data-name="ดาวพุธ"
+    data-info="ดาวเคราะห์ที่ใกล้ดวงอาทิตย์ที่สุด"></a-entity>
+
+  <a-entity class="planet" gltf-model="#venus"
+    position="2000 3 -2000"
+    scale="2 2 2"
+    data-name="ดาวศุกร์"
+    data-info="ดาวเคราะห์ที่ร้อนที่สุด"></a-entity>
+
+  <a-entity class="planet" gltf-model="#earth"
+    position="3000 3 -2000"
+    scale="8 8 8"
+    data-name="โลก"
+    data-info="ดาวเคราะห์ที่มีสิ่งมีชีวิต"></a-entity>
+
+  <a-entity class="planet" gltf-model="#mars"
+    position="4000 -5 -2000"
+    scale="6 6 6"
+    data-name="ดาวอังคาร"
+    data-info="ดาวเคราะห์สีแดง"></a-entity>
+
+  <a-entity class="planet" gltf-model="#jupiter"
+    position="5500 3 -2000"
+    scale="2.5 2.5 2.5"
+    data-name="ดาวพฤหัสบดี"
+    data-info="ดาวเคราะห์ที่ใหญ่ที่สุดในระบบสุริยะ">
+  </a-entity>
+
+  <a-entity class="planet" gltf-model="#saturn"
+    position="7000 3 -2000"
+    scale="9 9 9"
+    data-name="ดาวเสาร์"
+    data-info="ดาวเคราะห์ที่มีวงแหวน"></a-entity>
+
+  <a-entity class="planet" gltf-model="#uranus"
+    position="8500 1 -2000"
+    scale="0.2 0.2 0.2"
+    data-name="ดาวยูเรนัส"
+    data-info="ดาวเคราะห์ที่มีแกนเอียงมาก"></a-entity>
+
+  <a-entity class="planet" gltf-model="#neptune"
+    position="10000 1 -2000"
+    scale="2 2 2"
+    data-name="ดาวเนปจูน"
+    data-info="ดาวเคราะห์ที่อยู่ไกลที่สุด"></a-entity>
+
+</a-entity>
+
+<script>
+const planets = document.querySelectorAll(".planet");
+const cameraRig = document.getElementById("cameraRig");
+const info = document.getElementById("info");
+
+let index = 0;
+let isPlaying = true;
+let teacherMode = false;
+
+let zoomOffset = 0;
+
+const ZOOM_MIN = 5;    // ใกล้สุด (ชนโมเดลไม่ได้)
+const ZOOM_MAX = 120;  // ไกลสุด
+const ZOOM_STEP = 8;   // ความแรงต่อครั้ง
+
+const cameraDistances = [
+  80,  // Sun
+  20,  // Mercury
+  20,  // Venus
+  20,  // Earth
+  20,  // Mars
+  5,   // Jupiter
+  20,  // Saturn
+  55,  // Uranus
+  55   // Neptune
+];
+
+const teacherContent = {
+  "ดวงอาทิตย์": `
+  • แหล่งพลังงานของระบบสุริยะ<br>
+  • มวลคิดเป็น ~99.8% ของทั้งระบบ<br>
+  • พลังงานจากปฏิกิริยานิวเคลียร์ฟิวชัน
+  `,
+  "ดาวพุธ": `
+  • ไม่มีบรรยากาศที่แท้จริง<br>
+  • กลางวันร้อนจัด กลางคืนหนาวจัด<br>
+  • โคจรรอบดวงอาทิตย์เร็วที่สุด
+  `,
+  "ดาวศุกร์": `
+  • เกิดปรากฏการณ์เรือนกระจกขั้นรุนแรง<br>
+  • หมุนย้อนทิศทางดาวอื่น<br>
+  • อุณหภูมิพื้นผิวสูงกว่า 460°C
+  `,
+  "โลก": `
+  • ดาวเคราะห์เพียงดวงที่พบสิ่งมีชีวิต<br>
+  • มีน้ำในสถานะของเหลว<br>
+  • มีสนามแม่เหล็กป้องกันรังสี
+  `,
+  "ดาวอังคาร": `
+  • มีร่องรอยน้ำในอดีต<br>
+  • เป้าหมายหลักของการสำรวจอวกาศ<br>
+  • มีภูเขาที่สูงที่สุดในระบบสุริยะ
+  `,
+  "ดาวพฤหัสบดี": `
+  • ดาวแก๊สยักษ์ที่ใหญ่ที่สุด<br>
+  • มีพายุ Great Red Spot<br>
+  • มีดวงจันทร์จำนวนมาก
+  `,
+  "ดาวเสาร์": `
+  • วงแหวนประกอบด้วยน้ำแข็งและหิน<br>
+  • ความหนาแน่นต่ำมาก<br>
+  • มีดวงจันทร์ Titan
+  `,
+  "ดาวยูเรนัส": `
+  • แกนเอียง ~98 องศา<br>
+  • หมุนเหมือนกลิ้งรอบดวงอาทิตย์<br>
+  • อุณหภูมิต่ำมาก
+  `,
+  "ดาวเนปจูน": `
+  • ลมแรงที่สุดในระบบสุริยะ<br>
+  • สีน้ำเงินจากก๊าซมีเทน<br>
+  • ใช้เวลาหนึ่งรอบโคจร ~165 ปีโลก
+  `
+};
+
+/* ===== แสดงข้อมูล ===== */
+function showInfo(p){
+  const name = p.dataset.name;
+
+  info.innerHTML = `
+    <b>${name}</b><br>
+    ${p.dataset.info}
+
+    ${teacherMode ? `
+      <hr>
+      <b>🎓 อธิบายหน้าชั้น</b><br>
+      <small style="display:block;text-align:left;">
+        ${teacherContent[name] || "ไม่มีข้อมูล"}
+      </small>
+    ` : ""}
+
+    <hr>
+    <small>
+      สถานะ: ${isPlaying ? "▶ เล่น" : "⏸ หยุด"}<br>
+      โหมด: ${teacherMode ? "อธิบายหน้าชั้น" : "ปกติ"}
+    </small>
+  `;
+
+  info.style.display = "block";
+}
+
+/* ===== ตั้งค่าให้ดาวหมุน ===== */
+function setupPlanetSpin(){
+  planets.forEach(p=>{
+    const baseRot = p.getAttribute("rotation") || {x:0,y:0,z:0};
+
+    p.setAttribute("animation__spin", {
+      property: "rotation",
+      from: `${baseRot.x} ${baseRot.y} ${baseRot.z}`,
+      to:   `${baseRot.x} ${baseRot.y + 360} ${baseRot.z}`,
+      dur: 20000,
+      easing: "linear",
+      loop: true
+    });
+  });
+}
+
+/* ===== โฟกัสดาว ===== */
+function focusPlanet(i){
+  index = i;              
+  zoomOffset = 0;
+
+  const planet = planets[i];
+  const pos = planet.getAttribute("position");
+
+  // ===== รีเซ็ตกล้อง =====
+  resetCameraView();
+
+  cameraRig.removeAttribute("animation__move");
+  cameraRig.removeAttribute("animation__spin");
+  
+  // ===== เคลื่อนกล้อง =====
+  cameraRig.setAttribute("animation__move", {
+    property: "position",
+    to: `${pos.x} 1.6 ${pos.z + cameraDistances[i]}`,
+    dur: 1400,
+    easing: "easeInOutCubic"
+  });
+
+  // ===== หมุนกล้อง (effect ตอนเปลี่ยนดาว) =====
+  cameraRig.setAttribute("animation__spin", {
+    property: "rotation",
+    from: "0 0 0",
+    to: "0 360 0",
+    dur: 1000,
+    easing: "easeInOutSine"
+  });
+
+  // ===== คุมความเร็วหมุนดาว =====
+  planets.forEach(p=>{
+    p.setAttribute("animation__spin", "enabled", true);
+    p.setAttribute("animation__spin", "dur", 20000);
+  });
+
+  planet.setAttribute("animation__spin", "dur", 8000);
+
+  // ===== แสดงข้อมูล =====
+  showInfo(planet);
+}
+
+
+/* ===== ปุ่ม ===== */
+function nextPlanet(){
+  index = (index+1)%planets.length;
+  focusPlanet(index);
+}
+function prevPlanet(){
+  index = (index-1+planets.length)%planets.length;
+  focusPlanet(index);
+}
+
+/* ===== คลิกดาว ===== */
+planets.forEach(p=>{
+  p.addEventListener("click", ()=>{
+    index = Array.from(planets).indexOf(p);
+    focusPlanet(index);
+  });
+});
+
+/* เริ่มต้น */
+setupPlanetSpin();
+
+function togglePlay(){
+  isPlaying = !isPlaying;
+
+  planets.forEach(p=>{
+    p.setAttribute("animation__spin","enabled",isPlaying);
+  });
+
+  showInfo(planets[index]);
+}
+
+function toggleTeacher(){
+  teacherMode = !teacherMode;
+  const camera = cameraRig.querySelector("a-camera");
+  if(teacherMode){
+    isPlaying = false;
+    camera.setAttribute("look-controls","enabled",false);
+    planets.forEach(p=>{
+      p.setAttribute("animation__spin","enabled",false);
+    });
+
+  }else{
+    isPlaying = true;
+    camera.setAttribute("look-controls","enabled",true);
+    planets.forEach(p=>{
+      p.setAttribute("animation__spin","enabled",true);
+      p.setAttribute("animation__spin","dur",20000);
+    });
+  }
+  showInfo(planets[index]);
+}
+
+function startJourney(){
+  document.getElementById("intro").style.display = "none";
+
+  index = 0;       
+  isPlaying = true;
+  teacherMode = false;
+
+  planets.forEach(p=>{
+    p.setAttribute("animation__spin","enabled",true);
+  });
+
+  focusPlanet(0);
+}
+
+function resetCameraView(){
+  const camera = cameraRig.querySelector("a-camera");
+
+  camera.setAttribute("look-controls","enabled",false);
+
+  cameraRig.object3D.rotation.set(0,0,0);
+  camera.object3D.rotation.set(0,0,0);
+
+  setTimeout(()=>{
+    camera.setAttribute("look-controls","enabled",true);
+  },50);
+}
+
+function zoomIn(){
+  zoomOffset = Math.max(zoomOffset - ZOOM_STEP, -ZOOM_MAX);
+  applyZoom();
+}
+
+function zoomOut(){
+  zoomOffset = Math.min(zoomOffset + ZOOM_STEP, ZOOM_MAX);
+  applyZoom();
+}
+
+function applyZoom(){
+  const planet = planets[index];
+  const pos = planet.getAttribute("position");
+
+  const baseDist = cameraDistances[index];
+  const finalDist = Math.max(baseDist + zoomOffset, ZOOM_MIN);
+
+  cameraRig.removeAttribute("animation__move");
+
+  cameraRig.setAttribute("animation__move", {
+    property: "position",
+    to: `${pos.x} 1.6 ${pos.z + finalDist}`,
+    dur: 400,
+    easing: "easeOutQuad"
+  });
+}
+
+</script>
+
+</a-scene>
+<div id="intro">
+  <h1>🌌 ท่องเที่ยวระบบสุริยะอันยิ่งใหญ่</h1>
+  <p>สำรวจดาวเคราะห์ในระบบสุริยะ<br>ผ่านเทคโนโลยี AR</p>
+  <button onclick="startJourney()">🚀 เริ่มการเดินทาง</button>
+</div>
+</body>
+</html>
