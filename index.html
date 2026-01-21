@@ -14,6 +14,7 @@ html,body{
   overflow:hidden;
   background:black;
   font-family:sans-serif;
+  touch-action: none;
 }
 
 /* ================= A-SCENE ================= */
@@ -173,6 +174,8 @@ a-scene{
 }
 
 </style>
+<meta name="viewport"
+content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 </head>
 
 <body>
@@ -551,7 +554,10 @@ function applyZoom(){
     easing: "easeOutQuad"
   });
 }
-  
+
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("gesturechange", e => e.preventDefault());
+document.addEventListener("gestureend", e => e.preventDefault());
 </script>
 
 </a-scene>
@@ -562,6 +568,7 @@ function applyZoom(){
 </div>
 </body>
 </html>
+
 
 
 
