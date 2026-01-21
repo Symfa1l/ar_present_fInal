@@ -405,6 +405,18 @@ function setupPlanetSpin(){
   });
 }
 
+function applyPlayState(){
+  planets.forEach(p=>{
+    p.setAttribute("animation__spin","enabled", isPlaying && !teacherMode);
+    p.setAttribute("animation__spin","dur",20000);
+  });
+
+  // ดาวที่โฟกัสหมุนเร็วขึ้น เฉพาะตอนเล่น
+  if(isPlaying && !teacherMode){
+    planets[index].setAttribute("animation__spin","dur",8000);
+  }
+}
+
 /* ===== โฟกัสดาว ===== */
 function focusPlanet(i){
   index = i;              
@@ -436,13 +448,7 @@ function focusPlanet(i){
     easing: "easeInOutSine"
   });
 
-  // ===== คุมความเร็วหมุนดาว =====
-  planets.forEach(p=>{
-    p.setAttribute("animation__spin", "enabled", true);
-    p.setAttribute("animation__spin", "dur", 20000);
-  });
-
-  planet.setAttribute("animation__spin", "dur", 8000);
+applyPlayState();
 
   // ===== แสดงข้อมูล =====
   showInfo(planet);
@@ -472,32 +478,27 @@ setupPlanetSpin();
 
 function togglePlay(){
   isPlaying = !isPlaying;
-
-  planets.forEach(p=>{
-    p.setAttribute("animation__spin","enabled",isPlaying);
-  });
-
+  applyPlayState();
   showInfo(planets[index]);
 }
 
 function toggleTeacher(){
   teacherMode = !teacherMode;
+
   const camera = cameraRig.querySelector("a-camera");
+
   if(teacherMode){
-    isPlaying = false;
+    // ===== เข้าโหมดสอน =====
+    isPlaying = false; // บังคับหยุด
     camera.setAttribute("look-controls","enabled",false);
-    planets.forEach(p=>{
-      p.setAttribute("animation__spin","enabled",false);
-    });
 
   }else{
-    isPlaying = true;
+    // ===== ออกจากโหมดสอน =====
+    isPlaying = true;  // กลับมาเล่นเสมอ
     camera.setAttribute("look-controls","enabled",true);
-    planets.forEach(p=>{
-      p.setAttribute("animation__spin","enabled",true);
-      p.setAttribute("animation__spin","dur",20000);
-    });
   }
+
+  applyPlayState();
   showInfo(planets[index]);
 }
 
@@ -568,8 +569,3 @@ document.addEventListener("gestureend", e => e.preventDefault());
 </div>
 </body>
 </html>
-
-
-
-
-
