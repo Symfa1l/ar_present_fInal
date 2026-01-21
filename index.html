@@ -526,11 +526,13 @@ function resetCameraView(){
 }
 
 function zoomIn(){
+  if(isMobile()) return; 
   zoomOffset = Math.max(zoomOffset - ZOOM_STEP, -ZOOM_MAX);
   applyZoom();
 }
 
 function zoomOut(){
+  if(isMobile()) return; 
   zoomOffset = Math.min(zoomOffset + ZOOM_STEP, ZOOM_MAX);
   applyZoom();
 }
@@ -551,7 +553,10 @@ function applyZoom(){
     easing: "easeOutQuad"
   });
 }
-
+  
+function isMobile(){
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 </script>
 
 </a-scene>
@@ -562,5 +567,6 @@ function applyZoom(){
 </div>
 </body>
 </html>
+
 
 
